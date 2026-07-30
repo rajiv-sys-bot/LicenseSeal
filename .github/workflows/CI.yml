@@ -22,7 +22,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - run: npm run build:frontend
+      - run: npm run build
 
   contract:
     name: Contract compile and tests
