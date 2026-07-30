@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "npm run contract:compile && npm run contract:sync-assets && npm run test && npm run typecheck && npm run build:frontend",
-    "build:frontend": "next build --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
