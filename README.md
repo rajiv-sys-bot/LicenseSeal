@@ -1,36 +1,43 @@
 # LicenseSeal MD
 
-Privacy-preserving doctor-license verification on Midnight preview. Doctors keep credential details private; hospitals receive license status and expiry without collecting personal files.
+Privacy-preserving doctor-license verification on Midnight `preview`. Doctors keep credential details private; hospitals see only license status, expiry, and verification result.
 
-## Browser deployment
+## Links
 
-Deployment follows the 1AM reference flow from Midnight docs:
+- Live app: `<add deployed URL>`
+- Video demo: `<add demo video URL>`
+- Contract explorer: `<add preview contract explorer URL>`
+- Screenshot gallery: [Screenshots](#screenshots)
 
-1. App explicitly selects Midnight `preview`.
-2. Browser connects to injected 1AM extension.
-3. Runtime service URLs come from 1AM `getConfiguration()`.
-4. Compiled ZK assets load from `/public/zk/doctor_license`.
-5. 1AM supplies proving provider through `getProvingProvider()`.
-6. Browser builds deployment with `createUnprovenDeployTx`.
-7. 1AM balances and submits transaction through `submitTxAsync`.
-8. `/deploy` displays contract address and transaction ID, then waits for indexer confirmation.
+## Overview
 
-No funded server wallet is used. No server deployment script exists. Main flow does require a local proof server for 1AM proving.
+LicenseSeal is a browser-based registry for medical licenses on Midnight.
 
-## Prerequisites
+- Doctors receive a private credential in browser.
+- Boards issue, renew, and revoke licenses on chain.
+- Hospitals verify status without collecting a personal file.
+- All live data comes from the connected wallet and the indexer.
 
-- Node.js 22+
-- [1AM browser extension](https://1am.xyz), configured for preview and local proof server
-- Compact CLI only when recompiling contract
+## Screenshots
 
-Install Compact CLI:
+Add product screenshots here.
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSf \
-  https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
-```
+- App home: `<add screenshot>`
+- Deploy flow: `<add screenshot>`
+- Registry view: `<add screenshot>`
+- Verification receipt: `<add screenshot>`
 
-## Run and deploy
+## How To Use
+
+### 1. Set up
+
+1. Install `Node.js 22+`.
+2. Install the [1AM browser extension](https://1am.xyz).
+3. Set wallet network to `preview`.
+4. Ensure local proof server is available through wallet config.
+5. Set `NEXT_PUBLIC_CONTRACT_ADDRESS` to deployed preview contract address.
+
+### 2. Start app
 
 ```bash
 npm ci
@@ -39,39 +46,122 @@ npm run contract:sync-assets
 npm run dev
 ```
 
-Open [http://localhost:3000/deploy](http://localhost:3000/deploy):
+Open `http://localhost:3000`.
 
-1. Connect 1AM.
-2. Confirm page reports preview.
-3. Select **Deploy LicenseSeal contract**.
-4. Approve 1AM prompts.
-5. Copy displayed contract address and owner secret.
+### 3. Connect wallet
 
-Owner secret is generated only in browser and shown after deployment. Save it securely; contract needs it for board administration.
+1. Click `Connect 1AM`.
+2. Confirm wallet shows `preview`.
+3. Wait for indexer data to load.
 
-To enable live hospital lookup after deployment, create `.env.local`:
+### 4. Issue license
 
-```bash
-NEXT_PUBLIC_CONTRACT_ADDRESS=<displayed-contract-address>
-```
+1. Go to `Board registry`.
+2. Click `Issue credential`.
+3. Enter board secret.
+4. If first board, enter registry owner secret too.
+5. Submit transaction.
 
-Restart development server after changing public environment variable.
+### 5. Verify license
+
+1. Paste credential ID in `Verify`.
+2. App reads live registry state from indexer.
+3. Receipt shows status, board, expiry, and checked time.
+
+### 6. Generate proof
+
+1. Go to `Your credential`.
+2. Click `Generate proof`.
+3. App creates a short-lived proof URI for verifier.
+
+## Transaction Flow
+
+### Issue
+
+1. User opens issue form.
+2. App creates private credential material in browser.
+3. 1AM signs, balances, and submits tx to `preview`.
+4. App refreshes registry from indexer.
+
+### Renew
+
+1. Board enters board secret.
+2. App rotates private credential and submits update tx.
+3. Indexer refresh updates registry view.
+
+### Revoke
+
+1. Board enters board secret.
+2. App submits revocation tx.
+3. Indexer refresh marks credential revoked.
+
+### Verify
+
+1. App queries contract state through indexer.
+2. Receipt is derived from on-chain state.
+3. No dummy or sandbox data used.
+
+## Privacy Model
+
+- No server-side wallet.
+- No server-side private credential storage.
+- Owner secret stays local to browser and is shown only once after deploy.
+- Board secret is required only for board-admin actions.
+- Credential proof is short-lived and challenge-bound.
+- Verification reads only public chain state.
+
+## Contract Details
+
+- Contract file: [contracts/doctor_license.compact](./contracts/doctor_license.compact)
+- Managed bundle: [contracts/managed/doctor_license](./contracts/managed/doctor_license)
+- Network: `preview`
+- Wallet: `1AM`
+
+Contract capabilities:
+
+- `createBoard`
+- `updateBoard`
+- `deleteBoard`
+- `createLicense`
+- `updateLicense`
+- `deleteLicense`
+- `proveValidLicense`
+
+## Architecture
+
+1. `app/page.tsx` renders live registry UI.
+2. `hooks/use-midnight-wallet.ts` handles wallet connection state.
+3. `lib/midnight-browser.ts` connects wallet, builds providers, and submits tx.
+4. `lib/midnight-read.ts` reads chain state from indexer.
+5. `lib/doctor-license-client.ts` builds contract calls.
+6. `app/api/license/route.ts` normalizes chain reads behind trusted endpoints.
+7. `contracts/doctor_license.compact` defines chain rules.
+
+## Repository Layout
+
+- `app/` - Next.js app UI and API routes
+- `contracts/` - Compact contract source and generated bundle
+- `hooks/` - wallet hook
+- `lib/` - wallet, chain read, and contract client helpers
+- `public/zk/doctor_license/` - proving assets
+- `tests/` - contract tests
 
 ## Commands
 
-- `npm run contract:compile` — compile Compact contract with 0.31.1.
-- `npm run contract:sync-assets` — copy generated proving assets into browser-served path.
-- `npm test` — run compiled-contract simulator and frontend domain tests.
-- `npm run typecheck` — strict TypeScript check.
-- `npm run lint` — ESLint.
-- `npm run build` — compile, sync assets, test, typecheck, and production build using webpack.
+- `npm run contract:compile` - compile Compact contract.
+- `npm run contract:sync-assets` - copy proof assets into `public/zk/doctor_license`.
+- `npm run dev` - run local app.
+- `npm run test` - run contract and app tests.
+- `npm run typecheck` - TypeScript check.
+- `npm run lint` - ESLint.
+- `npm run build` - compile, sync assets, test, typecheck, and production build.
 
-## Structure
+## Environment
 
-- `contracts/doctor_license.compact` — board CRUD, license CRUD, and private challenge proof. Public reads use indexed ledger state to keep deployment below block limits.
-- `contracts/managed/doctor_license` — generated bundle; requires `@midnight-ntwrk/compact-runtime` 0.16.0.
-- `lib/midnight-browser.ts` — 1AM detection, preview session, providers, wallet balancing/submission, indexer patch.
-- `lib/deploy-doctor-license.ts` — browser-only deployment transaction.
-- `app/deploy` — deployment UI with persistent public contract address.
-- `public/zk/doctor_license` — browser proving assets.
-- `.github/workflows/CI.yml` — frontend and contract verification.
+- `NEXT_PUBLIC_CONTRACT_ADDRESS` - deployed preview contract address.
+
+## Notes
+
+- No seeded demo data remains in app.
+- Live pages require contract address and connected 1AM wallet.
+- Explorer/indexer is source of truth for registry views.
