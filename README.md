@@ -1,5 +1,7 @@
 # LicenseSeal MD
 
+[![CI](https://github.com/rajiv-sys-bot/LicenseSeal/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/rajiv-sys-bot/LicenseSeal/actions/workflows/CI.yml)
+
 Privacy-preserving doctor-license verification on Midnight `preview`. Doctors keep credential details private; hospitals see only license status, expiry, and verification result.
 
 ## Links
