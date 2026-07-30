@@ -22,12 +22,12 @@ LicenseSeal is a browser-based registry for medical licenses on Midnight.
 
 <table>
   <tr>
-    <td align="center"><strong>App home</strong><br /><code>&lt;add screenshot&gt;</code></td>
-    <td align="center"><strong>Deploy flow</strong><br /><code>&lt;add screenshot&gt;</code></td>
+    <td align="center"><strong>App home</strong><br /><code><img width="1876" height="1005" alt="image" src="https://github.com/user-attachments/assets/b15d3ef3-4949-4b57-9729-5325f03e2c52" /></code></td>
+    <td align="center"><strong>Deploy flow</strong><br /><code><img width="1876" height="1005" alt="image" src="https://github.com/user-attachments/assets/b69efc33-8355-44a0-b3c5-2900fe20b995" /></code></td>
   </tr>
   <tr>
-    <td align="center"><strong>Registry view</strong><br /><code>&lt;add screenshot&gt;</code></td>
-    <td align="center"><strong>Verification receipt</strong><br /><code>&lt;add screenshot&gt;</code></td>
+    <td align="center"><strong>Registry view</strong><br /><code><img width="1876" height="1005" alt="image" src="https://github.com/user-attachments/assets/677f1d19-a328-4014-bf0d-3c32d3703fe3" /></code></td>
+    <td align="center"><strong>CI</strong><br /><code><img width="1876" height="1005" alt="image" src="https://github.com/user-attachments/assets/76a27a0d-6e6d-4a37-9c7f-858564c53528" /></code></td>
   </tr>
 </table>
 
