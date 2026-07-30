@@ -4,9 +4,9 @@ Privacy-preserving doctor-license verification on Midnight `preview`. Doctors ke
 
 ## Links
 
-- Live app: `<add deployed URL>`
-- Video demo: `<add demo video URL>`
-- Contract explorer: `<add preview contract explorer URL>`
+- Live app: https://license-seal-sigma.vercel.app/
+- Video demo: https://drive.google.com/file/d/1NMiQzPdVNAz97yzxmqPD12EIg0DGU6SG/view?usp=sharing
+- Contract explorer: https://preview.midnightexplorer.com/contracts/0xd5e2dc450d37260f6f43d4b15ab74f48e91dfd81497735506e27c0c3257d9b74
 - Screenshot gallery: [Screenshots](#screenshots)
 
 ## Overview
@@ -20,12 +20,16 @@ LicenseSeal is a browser-based registry for medical licenses on Midnight.
 
 ## Screenshots
 
-Add product screenshots here.
-
-- App home: `<add screenshot>`
-- Deploy flow: `<add screenshot>`
-- Registry view: `<add screenshot>`
-- Verification receipt: `<add screenshot>`
+<table>
+  <tr>
+    <td align="center"><strong>App home</strong><br /><code>&lt;add screenshot&gt;</code></td>
+    <td align="center"><strong>Deploy flow</strong><br /><code>&lt;add screenshot&gt;</code></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Registry view</strong><br /><code>&lt;add screenshot&gt;</code></td>
+    <td align="center"><strong>Verification receipt</strong><br /><code>&lt;add screenshot&gt;</code></td>
+  </tr>
+</table>
 
 ## How To Use
 
