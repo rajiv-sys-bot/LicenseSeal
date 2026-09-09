@@ -1,0 +1,230 @@
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+// LicenseSeal: privacy-preserving doctor-license registry.
+// Public: opaque credential IDs, board keys, expiry/status, aggregate counters.
+// Private: doctor identity, license number, specialty, issuer/admin secrets, nonce.
+
+export ledger registryOwner: Bytes<32>;
+export ledger trustedBoards: Set<Bytes<32>>;
+export ledger boardAuthorizations: Set<Bytes<32>>;
+
+export ledger issuedLicenses: Set<Bytes<32>>;
+export ledger revokedLicenses: Set<Bytes<32>>;
+export ledger licenseOwnerships: Set<Bytes<32>>;
+export ledger usedProofs: Set<Bytes<32>>;
+
+// Maps support instant hospital lookup by opaque credential ID.
+export ledger licenseExpiries: Map<Bytes<32>, Uint<64>>;
+export ledger licenseIssuedAt: Map<Bytes<32>, Uint<64>>;
+export ledger licenseIssuers: Map<Bytes<32>, Bytes<32>>;
+
+export ledger boardCount: Counter;
+export ledger issuanceCount: Counter;
+export ledger activeLicenseCount: Counter;
+export ledger verificationCount: Counter;
+export ledger revocationCount: Counter;
+
+witness ownerSecret(): Bytes<32>;
+witness boardSecret(): Bytes<32>;
+witness doctorSecret(): Bytes<32>;
+witness credentialPayload(): Bytes<32>;
+witness credentialNonce(): Bytes<32>;
+witness credentialBoardKey(): Bytes<32>;
+
+circuit ownerKey(secret: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([
+    pad(32, "license:owner:v1"),
+    secret
+  ]);
+}
+
+circuit boardKey(secret: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([
+    pad(32, "license:board:v1"),
+    secret
+  ]);
+}
+
+circuit boardAuthorization(key: Bytes<32>, secret: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([
+    pad(32, "license:board-auth:v1"),
+    key,
+    secret
+  ]);
+}
+
+circuit licenseCommitment(
+  payload: Bytes<32>,
+  nonce: Bytes<32>,
+  issuer: Bytes<32>
+): Bytes<32> {
+  return persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "license:credential:v1"),
+    payload,
+    nonce,
+    issuer
+  ]);
+}
+
+circuit ownership(credentialId: Bytes<32>, issuer: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([
+    pad(32, "license:ownership:v1"),
+    credentialId,
+    issuer
+  ]);
+}
+
+circuit proofNullifier(
+  credentialId: Bytes<32>,
+  challenge: Bytes<32>,
+  doctorSk: Bytes<32>
+): Bytes<32> {
+  return persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "license:proof:v1"),
+    credentialId,
+    challenge,
+    doctorSk
+  ]);
+}
+
+circuit assertOwner(): [] {
+  assert(registryOwner == ownerKey(ownerSecret()), "only registry owner may perform this action");
+}
+
+circuit authenticatedBoard(): Bytes<32> {
+  const secret = boardSecret();
+  const key = boardKey(secret);
+  assert(trustedBoards.member(disclose(key)), "board is not trusted");
+  assert(
+    boardAuthorizations.member(disclose(boardAuthorization(key, secret))),
+    "board authorization failed"
+  );
+  return key;
+}
+
+constructor() {
+  registryOwner = disclose(ownerKey(ownerSecret()));
+}
+
+// Board CRUD ---------------------------------------------------------------
+
+export circuit createBoard(key: Bytes<32>, authorization: Bytes<32>): [] {
+  assertOwner();
+  assert(key != default<Bytes<32>>, "board key cannot be empty");
+  assert(authorization != default<Bytes<32>>, "board authorization cannot be empty");
+  assert(!trustedBoards.member(disclose(key)), "board already exists");
+  trustedBoards.insert(disclose(key));
+  boardAuthorizations.insert(disclose(authorization));
+  boardCount.increment(1);
+}
+
+export circuit updateBoard(
+  key: Bytes<32>,
+  oldAuthorization: Bytes<32>,
+  newAuthorization: Bytes<32>
+): [] {
+  assertOwner();
+  assert(trustedBoards.member(disclose(key)), "board not found");
+  assert(boardAuthorizations.member(disclose(oldAuthorization)), "old authorization not found");
+  assert(newAuthorization != default<Bytes<32>>, "new authorization cannot be empty");
+  assert(!boardAuthorizations.member(disclose(newAuthorization)), "authorization already exists");
+  boardAuthorizations.remove(disclose(oldAuthorization));
+  boardAuthorizations.insert(disclose(newAuthorization));
+}
+
+export circuit deleteBoard(key: Bytes<32>, authorization: Bytes<32>): [] {
+  assertOwner();
+  assert(trustedBoards.member(disclose(key)), "board not found");
+  assert(boardAuthorizations.member(disclose(authorization)), "authorization not found");
+  trustedBoards.remove(disclose(key));
+  boardAuthorizations.remove(disclose(authorization));
+  boardCount.decrement(1);
+}
+
+// License CRUD -------------------------------------------------------------
+
+export circuit createLicense(
+  credentialId: Bytes<32>,
+  issuedAt: Uint<64>,
+  expiresAt: Uint<64>
+): [] {
+  const issuer = authenticatedBoard();
+  assert(credentialId != default<Bytes<32>>, "credential ID cannot be empty");
+  assert(expiresAt > issuedAt, "expiry must be after issue time");
+  assert(!issuedLicenses.member(disclose(credentialId)), "license already exists");
+  assert(!revokedLicenses.member(disclose(credentialId)), "revoked ID cannot be reused");
+  issuedLicenses.insert(disclose(credentialId));
+  licenseOwnerships.insert(disclose(ownership(credentialId, issuer)));
+  licenseIssuedAt.insert(disclose(credentialId), disclose(issuedAt));
+  licenseExpiries.insert(disclose(credentialId), disclose(expiresAt));
+  licenseIssuers.insert(disclose(credentialId), disclose(issuer));
+  issuanceCount.increment(1);
+  activeLicenseCount.increment(1);
+}
+
+// Atomic replacement preserves history: old ID becomes revoked; new ID is issued.
+export circuit updateLicense(
+  oldCredentialId: Bytes<32>,
+  newCredentialId: Bytes<32>,
+  issuedAt: Uint<64>,
+  expiresAt: Uint<64>
+): [] {
+  const issuer = authenticatedBoard();
+  assert(issuedLicenses.member(disclose(oldCredentialId)), "old license not found");
+  assert(!revokedLicenses.member(disclose(oldCredentialId)), "old license already revoked");
+  assert(
+    licenseOwnerships.member(disclose(ownership(oldCredentialId, issuer))),
+    "board did not issue old license"
+  );
+  assert(!issuedLicenses.member(disclose(newCredentialId)), "new license already exists");
+  assert(!revokedLicenses.member(disclose(newCredentialId)), "new credential ID was revoked");
+  assert(expiresAt > issuedAt, "expiry must be after issue time");
+
+  revokedLicenses.insert(disclose(oldCredentialId));
+  issuedLicenses.insert(disclose(newCredentialId));
+  licenseOwnerships.insert(disclose(ownership(newCredentialId, issuer)));
+  licenseIssuedAt.insert(disclose(newCredentialId), disclose(issuedAt));
+  licenseExpiries.insert(disclose(newCredentialId), disclose(expiresAt));
+  licenseIssuers.insert(disclose(newCredentialId), disclose(issuer));
+  issuanceCount.increment(1);
+  revocationCount.increment(1);
+}
+
+export circuit deleteLicense(credentialId: Bytes<32>): [] {
+  const issuer = authenticatedBoard();
+  assert(issuedLicenses.member(disclose(credentialId)), "license not found");
+  assert(!revokedLicenses.member(disclose(credentialId)), "license already revoked");
+  assert(
+    licenseOwnerships.member(disclose(ownership(credentialId, issuer))),
+    "board did not issue license"
+  );
+  revokedLicenses.insert(disclose(credentialId));
+  activeLicenseCount.decrement(1);
+  revocationCount.increment(1);
+}
+
+// Doctor proves private wallet credential matches public ID and is active.
+export circuit proveValidLicense(
+  credentialId: Bytes<32>,
+  hospitalChallenge: Bytes<32>,
+  currentTime: Uint<64>
+): [] {
+  const issuer = credentialBoardKey();
+  const derived = licenseCommitment(credentialPayload(), credentialNonce(), issuer);
+  assert(disclose(derived) == credentialId, "private credential does not match ID");
+  assert(trustedBoards.member(disclose(issuer)), "issuing board is no longer trusted");
+  assert(issuedLicenses.member(disclose(credentialId)), "license not found");
+  assert(!revokedLicenses.member(disclose(credentialId)), "license revoked");
+  const expiresAt = licenseExpiries.lookup(disclose(credentialId));
+  assert(currentTime < expiresAt, "license expired");
+  const nullifier = proofNullifier(credentialId, hospitalChallenge, doctorSecret());
+  assert(!usedProofs.member(disclose(nullifier)), "proof challenge already used");
+  usedProofs.insert(disclose(nullifier));
+  verificationCount.increment(1);
+}
+
+// Public state is read directly through the indexer and generated `ledger()`
+// decoder. Exporting getter circuits would install a verifier key for every
+// getter and make the deployment transaction exceed preprod block limits.
