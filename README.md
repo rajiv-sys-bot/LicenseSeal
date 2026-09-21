@@ -1,4 +1,4 @@
-# LicenseSeal MD
+# LicenseSeal
 
 [![CI](https://github.com/rajiv-sys-bot/LicenseSeal/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/rajiv-sys-bot/LicenseSeal/actions/workflows/CI.yml)
 
@@ -8,6 +8,8 @@ Privacy-preserving doctor-license verification on Midnight `preview`. Doctors ke
 
 - Live app: https://license-seal-sigma.vercel.app/
 - Video demo: https://drive.google.com/file/d/1NMiQzPdVNAz97yzxmqPD12EIg0DGU6SG/view?usp=sharing
+- Product proposal: [proposals.md](./proposals.md)
+- Product X profile: https://x.com/LicenseSeal
 - Contract explorer: https://preview.midnightexplorer.com/contracts/0xd5e2dc450d37260f6f43d4b15ab74f48e91dfd81497735506e27c0c3257d9b74
 - Screenshot gallery: [Screenshots](#screenshots)
 
@@ -151,6 +153,7 @@ Contract capabilities:
 - `lib/` - wallet, chain read, and contract client helpers
 - `public/zk/doctor_license/` - proving assets
 - `tests/` - contract tests
+- `proposals.md` - Level 3 idea submission for confidential credentials
 
 ## Commands
 
