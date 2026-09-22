@@ -10,6 +10,8 @@ Privacy-preserving doctor-license verification on Midnight `preview`. Doctors ke
 - Video demo: https://drive.google.com/file/d/1NMiQzPdVNAz97yzxmqPD12EIg0DGU6SG/view?usp=sharing
 - Product proposal: [proposals.md](./proposals.md)
 - Product X profile: https://x.com/LicenseSeal
+- Form: https://forms.gle/Si7Dnne4s7BoJEPw8
+- Sheet: https://docs.google.com/spreadsheets/d/12DaWvSOC2nVYBN3BnEyW1uF2CBG_l9NBYGZWwN1twEk/edit?usp=drivesdk
 - Contract explorer: https://preview.midnightexplorer.com/contracts/0xd5e2dc450d37260f6f43d4b15ab74f48e91dfd81497735506e27c0c3257d9b74
 - Screenshot gallery: [Screenshots](#screenshots)
 
