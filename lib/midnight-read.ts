@@ -40,7 +40,7 @@ export async function readLicenseOnChain(
   indexerWsUri: string,
   credentialId: string,
 ): Promise<OnChainLicense> {
-  setNetworkId("preview");
+  setNetworkId("preprod");
   const id = fromHex(credentialId);
   const provider = indexerPublicDataProvider(indexerUri, indexerWsUri);
   const state = await provider.queryContractState(contractAddress.replace(/^0x/, ""));
@@ -68,7 +68,7 @@ export async function readRegistryOnChain(
   indexerUri: string,
   indexerWsUri: string,
 ): Promise<OnChainRegistry> {
-  setNetworkId("preview");
+  setNetworkId("preprod");
   const provider = indexerPublicDataProvider(indexerUri, indexerWsUri);
   const state = await provider.queryContractState(contractAddress.replace(/^0x/, ""));
   if (!state) throw new Error("Contract not found on connected network.");

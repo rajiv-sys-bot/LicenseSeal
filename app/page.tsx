@@ -31,6 +31,7 @@ import {
   revokeLicenseOnChain,
   rotatePrivateCredential,
 } from "@/lib/doctor-license-client";
+import { LICENSE_SEAL_CONTRACT_ADDRESS } from "@/lib/deployment";
 import { toHex } from "@/lib/midnight-browser";
 import type { OnChainLicense, OnChainRegistry } from "@/lib/midnight-read";
 
@@ -48,7 +49,7 @@ type CheckEntry = {
 const STORAGE_KEY = "licenseseal:licenses:v1";
 const HISTORY_KEY = "licenseseal:check-history:v1";
 const PROOF_LIFETIME = 120;
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS?.trim() ?? "";
+const CONTRACT_ADDRESS = LICENSE_SEAL_CONTRACT_ADDRESS;
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en", { month: "short", day: "2-digit", year: "numeric" }).format(
@@ -223,9 +224,9 @@ export default function Home() {
     setSealPhase("verifying");
 
     try {
-      if (!liveMode) throw new Error("Set NEXT_PUBLIC_CONTRACT_ADDRESS to use live registry data.");
+      if (!liveMode) throw new Error("Preprod deployment is not configured.");
       if (!wallet.connected || !wallet.indexerUri || !wallet.indexerWsUri) {
-            throw new Error("Connect 1AM to query live preview registry data.");
+            throw new Error("Connect 1AM to query live preprod registry data.");
       }
       const response = await fetch("/api/license", {
         method: "POST",
@@ -280,7 +281,7 @@ export default function Home() {
   async function generateProof(record: LicenseRecord) {
     if (effectiveStatus(record, renderTime) !== "valid") return;
     if (!liveMode) {
-      setNotice("Set NEXT_PUBLIC_CONTRACT_ADDRESS to generate live proofs.");
+      setNotice("Preprod deployment is not configured.");
       return;
     }
     setBusy(true);
@@ -304,7 +305,7 @@ export default function Home() {
   async function submitLicense(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!liveMode) {
-      setIssueError("Set NEXT_PUBLIC_CONTRACT_ADDRESS to issue licenses on chain.");
+      setIssueError("Preprod deployment is not configured.");
       return;
     }
     const data = new FormData(event.currentTarget);
@@ -341,7 +342,7 @@ export default function Home() {
       setCredentialId(generated.credentialId);
       setProofRecordId(generated.credentialId);
       await refreshRegistry();
-      setNotice(`License issued on preview · tx ${shortId(issueTxId)}`);
+      setNotice(`License issued on preprod · tx ${shortId(issueTxId)}`);
       setShowIssue(false);
       setIssueError(null);
     } catch (error) {
@@ -377,7 +378,7 @@ export default function Home() {
           privateCredential: rotated.privateCredential,
         } : entry));
         await refreshRegistry();
-        setNotice(`License renewed on preview · tx ${shortId(renewTxId)}`);
+        setNotice(`License renewed on preprod · tx ${shortId(renewTxId)}`);
       } catch (error) {
         setNotice(error instanceof Error ? error.message : "Renewal failed.");
       } finally {
@@ -385,7 +386,7 @@ export default function Home() {
       }
       return;
     }
-    setNotice("Set NEXT_PUBLIC_CONTRACT_ADDRESS to renew licenses on chain.");
+    setNotice("Preprod deployment is not configured.");
   }
 
   async function revoke(record: LicenseRecord) {
@@ -396,7 +397,7 @@ export default function Home() {
       try {
         const revokeTxId = await revokeLicenseOnChain(wallet.session, CONTRACT_ADDRESS, boardSecret, record.id);
         await refreshRegistry();
-        setNotice(`License revoked on preview · tx ${shortId(revokeTxId)}`);
+        setNotice(`License revoked on preprod · tx ${shortId(revokeTxId)}`);
       } catch (error) {
         setNotice(error instanceof Error ? error.message : "Revocation failed.");
       } finally {
@@ -404,7 +405,7 @@ export default function Home() {
       }
       return;
     }
-    setNotice("Set NEXT_PUBLIC_CONTRACT_ADDRESS to revoke licenses on chain.");
+    setNotice("Preprod deployment is not configured.");
   }
 
   const connectedLabel = wallet.connected ? shortId(wallet.address ?? "connected") : "Connect 1AM";
@@ -469,7 +470,7 @@ export default function Home() {
                   />
                   <button className="notary-cta" disabled={busy}>{busy ? "Checking…" : "Verify"}</button>
                 </div>
-                {!liveMode && <p>Set NEXT_PUBLIC_CONTRACT_ADDRESS to query live registry data.</p>}
+                {!liveMode && <p>Preprod deployment is not configured.</p>}
               </form>
               <div className="seal-stage" aria-live="polite">
                 <NotarySeal phase={sealPhase} status={receiptStatus(result, chainResult)} />
@@ -553,7 +554,7 @@ export default function Home() {
           <div className="wallet-copy">
             <p className="eyebrow">Your credential</p>
             <h1>No local credential.</h1>
-            <p>Credentials issued from this browser appear here after their preview transaction finalizes.</p>
+            <p>Credentials issued from this browser appear here after their preprod transaction finalizes.</p>
           </div>
         </section>
       )}
@@ -569,10 +570,10 @@ export default function Home() {
           </div>
           <div className="registry-table">
             <div className="table-head"><span>License holder / ID</span><span>Specialty</span><span>Expiration</span><span>Status</span><span>Registry action</span></div>
-            {registryLoading && <div className="ledger-empty">Loading preview registry…</div>}
-            {!registryLoading && liveMode && !wallet.connected && <div className="ledger-empty">Connect 1AM to load preview registry data.</div>}
+            {registryLoading && <div className="ledger-empty">Loading preprod registry…</div>}
+            {!registryLoading && liveMode && !wallet.connected && <div className="ledger-empty">Connect 1AM to load preprod registry data.</div>}
             {!registryLoading && liveMode && wallet.connected && chainRecords.length === 0 && <div className="ledger-empty">Registry is live. No licenses issued yet.</div>}
-            {!registryLoading && !liveMode && <div className="ledger-empty">Set `NEXT_PUBLIC_CONTRACT_ADDRESS` to use live registry data.</div>}
+            {!registryLoading && !liveMode && <div className="ledger-empty">Preprod deployment is not configured.</div>}
             {chainRecords.map((record) => (
               <div className="table-row" key={record.id}>
                 <div><strong>{record.doctorLabel}</strong><button onClick={() => copy(record.id, "Credential ID")}>{record.licenseNumber ?? shortId(record.id)}<Clipboard size={11} /></button></div>
@@ -599,8 +600,8 @@ export default function Home() {
               </>
             )}
             {issueError && <p className="form-error"><CircleAlert size={15} />{issueError}</p>}
-            <p className="modal-privacy">1AM submits this transaction to preview. Local proof server proves it. Display labels and private credential material stay on this device.</p>
-            <button className="notary-cta" disabled={busy}><Plus size={15} />{busy ? "Submitting to preview…" : "Issue credential"}</button>
+            <p className="modal-privacy">1AM submits this transaction to preprod. Local proof server proves it. Display labels and private credential material stay on this device.</p>
+            <button className="notary-cta" disabled={busy}><Plus size={15} />{busy ? "Submitting to preprod…" : "Issue credential"}</button>
           </form>
         </div>
       )}

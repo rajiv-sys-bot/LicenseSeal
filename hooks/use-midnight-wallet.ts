@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { connectOneAmPreview, type BrowserSession } from "@/lib/midnight-browser";
+import { connectOneAmPreprod, type BrowserSession } from "@/lib/midnight-browser";
 
 type WalletState = {
   connected: boolean;
@@ -29,7 +29,7 @@ export function useMidnightWallet() {
   const connect = useCallback(async () => {
     setState((current) => ({ ...current, connecting: true, error: null }));
     try {
-      const session = await connectOneAmPreview("/zk/doctor_license/");
+      const session = await connectOneAmPreprod("/zk/doctor_license/");
       setState({
         connected: true,
         connecting: false,

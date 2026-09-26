@@ -9,7 +9,7 @@ import { indexerPublicDataProvider } from "@midnight-ntwrk/midnight-js-indexer-p
 import { setNetworkId } from "@midnight-ntwrk/midnight-js-network-id";
 import type { MidnightProvider, ProofProvider, WalletProvider } from "@midnight-ntwrk/midnight-js-types";
 
-export const MIDNIGHT_NETWORK = "preview" as const;
+export const MIDNIGHT_NETWORK = "preprod" as const;
 
 export function toHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -137,7 +137,7 @@ export async function detectOneAmWallet(): Promise<InitialAPI | null> {
   return null;
 }
 
-export async function connectOneAmPreview(zkAssetBasePath: string): Promise<BrowserSession> {
+export async function connectOneAmPreprod(zkAssetBasePath: string): Promise<BrowserSession> {
   setNetworkId(MIDNIGHT_NETWORK);
   const wallet = await detectOneAmWallet();
   if (!wallet) throw new Error("1AM wallet not detected. Install or enable extension, then reload.");
@@ -152,7 +152,7 @@ export async function connectOneAmPreview(zkAssetBasePath: string): Promise<Brow
     api.getShieldedAddresses(),
   ]);
   if (String(config.networkId).toLowerCase() !== MIDNIGHT_NETWORK) {
-    throw new Error(`Wrong wallet network: expected preview, received ${config.networkId}.`);
+    throw new Error(`Wrong wallet network: expected preprod, received ${config.networkId}. Switch 1AM to preprod and reconnect.`);
   }
   setNetworkId(MIDNIGHT_NETWORK);
 

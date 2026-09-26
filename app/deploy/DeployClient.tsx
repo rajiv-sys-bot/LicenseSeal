@@ -15,8 +15,9 @@ import {
   WalletCards,
 } from "lucide-react";
 import { deployDoctorLicense } from "@/lib/deploy-doctor-license";
+import { LICENSE_SEAL_CONTRACT_ADDRESS } from "@/lib/deployment";
 import {
-  connectOneAmPreview,
+  connectOneAmPreprod,
   detectOneAmWallet,
   MIDNIGHT_NETWORK,
   pollForContract,
@@ -24,7 +25,7 @@ import {
   type BrowserSession,
 } from "@/lib/midnight-browser";
 
-const DEPLOYMENT_STORAGE_KEY = "licenseseal:deployment:preview";
+const DEPLOYMENT_STORAGE_KEY = "licenseseal:deployment:preprod";
 
 type DeploymentRecord = {
   contractAddress: string;
@@ -63,9 +64,9 @@ export default function DeployClient() {
   const connect = useCallback(async () => {
     setConnecting(true);
     setError("");
-    setStatus("Opening 1AM on preview…");
+    setStatus("Opening 1AM on preprod…");
     try {
-      const connected = await connectOneAmPreview("/zk/doctor_license/");
+      const connected = await connectOneAmPreprod("/zk/doctor_license/");
       if (!mounted.current) return;
       setSession(connected);
       setStatus("1AM connected. Ready to deploy.");
@@ -98,17 +99,17 @@ export default function DeployClient() {
       setDeployment(record);
       setOwnerSecret(toHex(secret));
       window.localStorage.setItem(DEPLOYMENT_STORAGE_KEY, JSON.stringify(record));
-      setStatus("Transaction submitted. Waiting for preview indexer…");
+      setStatus("Transaction submitted. Waiting for preprod indexer…");
 
       try {
         await pollForContract(
           session.config.indexerUri,
           result.contractAddress,
           (attempt) => {
-            if (mounted.current) setStatus(`Waiting for preview indexer — attempt ${attempt}`);
+            if (mounted.current) setStatus(`Waiting for preprod indexer — attempt ${attempt}`);
           },
         );
-        if (mounted.current) setStatus("Contract deployed and indexed on preview.");
+        if (mounted.current) setStatus("Contract deployed and indexed on preprod.");
       } catch (reason) {
         if (mounted.current) {
           setError(reason instanceof Error ? reason.message : "Indexer confirmation timed out.");
@@ -142,11 +143,11 @@ export default function DeployClient() {
 
       <section className="deploy-stage">
         <div className="deploy-intro">
-          <p className="eyebrow">1AM browser deployment · preview</p>
+          <p className="eyebrow">1AM browser deployment · preprod</p>
           <h1>Put license trust<br /><em>on Midnight.</em></h1>
           <p>Deployment happens entirely in this browser. 1AM supplies wallet access, balancing, and submission. Local proof server handles proving. No server deployer enters flow.</p>
           <ol className="deploy-steps">
-            <li className={session ? "done" : "current"}><span>{session ? <Check size={15} /> : "1"}</span><div><strong>Connect 1AM</strong><small>Explicit Midnight preview session</small></div></li>
+            <li className={session ? "done" : "current"}><span>{session ? <Check size={15} /> : "1"}</span><div><strong>Connect 1AM</strong><small>Explicit Midnight preprod session</small></div></li>
             <li className={deployment ? "done" : session ? "current" : ""}><span>{deployment ? <Check size={15} /> : "2"}</span><div><strong>Approve deployment</strong><small>Proof and transaction stay browser-side</small></div></li>
             <li className={deployment ? "current" : ""}><span>3</span><div><strong>Save contract address</strong><small>Public registry identity</small></div></li>
           </ol>
@@ -162,9 +163,10 @@ export default function DeployClient() {
             <div className="runtime-row"><span>Contract</span><code>doctor_license</code></div>
             <div className="runtime-row"><span>Compact runtime</span><code>0.16.0</code></div>
             <div className="runtime-row"><span>Network</span><code>{MIDNIGHT_NETWORK}</code></div>
+            <div className="runtime-row"><span>Current deployment</span><code title={LICENSE_SEAL_CONTRACT_ADDRESS}>{LICENSE_SEAL_CONTRACT_ADDRESS.slice(0, 12)}…{LICENSE_SEAL_CONTRACT_ADDRESS.slice(-8)}</code></div>
 
             {walletInstalled === false && (
-              <div className="deploy-warning"><CircleAlert size={17} /><div><strong>1AM wallet required</strong><p>Install extension, select preview, enable local proof server, then reload page.</p><a href="https://1am.xyz" target="_blank" rel="noreferrer">Open 1AM <ExternalLink size={12} /></a></div></div>
+              <div className="deploy-warning"><CircleAlert size={17} /><div><strong>1AM wallet required</strong><p>Install extension, select preprod, enable local proof server, then reload page.</p><a href="https://1am.xyz" target="_blank" rel="noreferrer">Open 1AM <ExternalLink size={12} /></a></div></div>
             )}
 
             {!session && (

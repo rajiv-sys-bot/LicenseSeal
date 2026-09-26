@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/rajiv-sys-bot/LicenseSeal/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/rajiv-sys-bot/LicenseSeal/actions/workflows/CI.yml)
 
-Privacy-preserving doctor-license verification on Midnight `preview`. Doctors keep credential details private; hospitals see only license status, expiry, and verification result.
+Privacy-preserving doctor-license verification on Midnight `preprod`. Doctors keep credential details private; hospitals see only license status, expiry, and verification result.
 
 ## Links
 
@@ -12,7 +12,7 @@ Privacy-preserving doctor-license verification on Midnight `preview`. Doctors ke
 - Product X profile: https://x.com/LicenseSeal
 - Form: https://forms.gle/Si7Dnne4s7BoJEPw8
 - Sheet: https://docs.google.com/spreadsheets/d/12DaWvSOC2nVYBN3BnEyW1uF2CBG_l9NBYGZWwN1twEk/edit?usp=drivesdk
-- Contract explorer: https://preview.midnightexplorer.com/contracts/0xd5e2dc450d37260f6f43d4b15ab74f48e91dfd81497735506e27c0c3257d9b74
+- Contract explorer: https://preprod.midnightexplorer.com/contracts/0x649571d22e3ded01e26f0400099e7629fbac6d9e871d4240d50241dffe47342a
 - Screenshot gallery: [Screenshots](#screenshots)
 
 ## Overview
@@ -43,9 +43,9 @@ LicenseSeal is a browser-based registry for medical licenses on Midnight.
 
 1. Install `Node.js 22+`.
 2. Install the [1AM browser extension](https://1am.xyz).
-3. Set wallet network to `preview`.
+3. Set wallet network to `preprod`.
 4. Ensure local proof server is available through wallet config.
-5. Set `NEXT_PUBLIC_CONTRACT_ADDRESS` to deployed preview contract address.
+5. Use configured Preprod deployment `649571d22e3ded01e26f0400099e7629fbac6d9e871d4240d50241dffe47342a`.
 
 ### 2. Start app
 
@@ -61,7 +61,7 @@ Open `http://localhost:3000`.
 ### 3. Connect wallet
 
 1. Click `Connect 1AM`.
-2. Confirm wallet shows `preview`.
+2. Confirm wallet shows `preprod`.
 3. Wait for indexer data to load.
 
 ### 4. Issue license
@@ -90,7 +90,7 @@ Open `http://localhost:3000`.
 
 1. User opens issue form.
 2. App creates private credential material in browser.
-3. 1AM signs, balances, and submits tx to `preview`.
+3. 1AM signs, balances, and submits tx to `preprod`.
 4. App refreshes registry from indexer.
 
 ### Renew
@@ -124,7 +124,7 @@ Open `http://localhost:3000`.
 
 - Contract file: [contracts/doctor_license.compact](./contracts/doctor_license.compact)
 - Managed bundle: [contracts/managed/doctor_license](./contracts/managed/doctor_license)
-- Network: `preview`
+- Network: `preprod`
 - Wallet: `1AM`
 
 Contract capabilities:
@@ -167,12 +167,14 @@ Contract capabilities:
 - `npm run lint` - ESLint.
 - `npm run build` - compile, sync assets, test, typecheck, and production build.
 
-## Environment
+## Deployment
 
-- `NEXT_PUBLIC_CONTRACT_ADDRESS` - deployed preview contract address.
+- Network: Midnight Preprod
+- Contract: `649571d22e3ded01e26f0400099e7629fbac6d9e871d4240d50241dffe47342a`
+- Canonical config: [`lib/deployment.ts`](./lib/deployment.ts)
 
 ## Notes
 
 - No seeded demo data remains in app.
-- Live pages require contract address and connected 1AM wallet.
+- Live pages use configured Preprod contract and require connected 1AM wallet.
 - Explorer/indexer is source of truth for registry views.

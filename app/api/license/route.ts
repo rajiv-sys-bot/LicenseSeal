@@ -1,3 +1,4 @@
+import { LICENSE_SEAL_CONTRACT_ADDRESS } from "@/lib/deployment";
 import { readLicenseOnChain, readRegistryOnChain } from "@/lib/midnight-read";
 
 type RequestBody = {
@@ -20,10 +21,7 @@ function trustedMidnightUrl(value: unknown, protocols: string[]): string {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as RequestBody;
-    const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS?.trim();
-    if (!contractAddress || !/^(0x)?[0-9a-fA-F]{64}$/.test(contractAddress)) {
-      return Response.json({ error: "NEXT_PUBLIC_CONTRACT_ADDRESS is not configured." }, { status: 503 });
-    }
+    const contractAddress = LICENSE_SEAL_CONTRACT_ADDRESS;
     const indexerUri = trustedMidnightUrl(body.indexerUri, ["https:", "http:"]);
     const indexerWsUri = trustedMidnightUrl(body.indexerWsUri, ["wss:", "ws:"]);
     if (body.mode === "registry") {
